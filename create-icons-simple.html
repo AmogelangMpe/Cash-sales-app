@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PaySnap Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 20px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📱 PaySnap Icon Generator</h1>
+    <p>Click the button to generate app icons. They will download automatically.</p>
+    
+    <button onclick="downloadIcons()">Generate & Download Icons</button>
+    
+    <div id="status" class="status"></div>
+    
+    <div id="preview"></div>
+    
+    <script>
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Green gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#84cc16');
+            gradient.addColorStop(1, '#059669');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Simple "PS" text (PaySnap)
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('PS', size / 2, size / 2);
+            
+            // Add border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = size * 0.02;
+            ctx.strokeRect(size * 0.05, size * 0.05, size * 0.9, size * 0.9);
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+        
+        function downloadIcons() {
+            const status = document.getElementById('status');
+            status.textContent = 'Generating icons...';
+            status.style.background = '#fff3cd';
+            
+            try {
+                // Create 192x192 icon
+                const icon192 = createIcon(192);
+                setTimeout(() => {
+                    downloadCanvas(icon192, 'icon-192.png');
+                    status.textContent = '✓ Downloaded icon-192.png';
+                    
+                    // Create 512x512 icon
+                    setTimeout(() => {
+                        const icon512 = createIcon(512);
+                        downloadCanvas(icon512, 'icon-512.png');
+                        status.textContent = '✅ Success! Both icons downloaded:\n✓ icon-192.png\n✓ icon-512.png\n\nMove them to your project folder!';
+                        status.style.background = '#d4edda';
+                        status.style.color = '#155724';
+                    }, 500);
+                }, 500);
+            } catch (error) {
+                status.textContent = '❌ Error: ' + error.message;
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+                console.error(error);
+            }
+        }
+        
+        // Show preview
+        window.addEventListener('load', () => {
+            const preview = document.getElementById('preview');
+            const icon192 = createIcon(192);
+            icon192.style.width = '100px';
+            icon192.style.height = '100px';
+            preview.appendChild(icon192);
+        });
+    </script>
+</body>
+</html>
+
