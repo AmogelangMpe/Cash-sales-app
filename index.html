@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#10b981">
+    <meta name="description" content="PaySnap - Mobile cash sales tracking app with inventory management">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>PaySnap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f9fafb;
+            --surface: #ffffff;
+            --text: #111827;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .logo-pay {
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-snap {
+            color: #60a5fa;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 12px;
+            transition: color 0.2s;
+            min-width: 80px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Screen */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Dashboard */
+        .hero-metric {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 32px 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-metric-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .hero-metric-value {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .alert-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .alert-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .alert-count {
+            background: var(--warning);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .alert-card.danger .alert-count {
+            background: var(--danger);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+            touch-action: manipulation;
+            min-height: 56px;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 100px;
+        }
+
+        .product-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            touch-action: manipulation;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:active {
+            transform: scale(0.95);
+        }
+
+        .product-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f3f4f6;
+        }
+
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .product-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .product-stock {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-stock.low {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .product-stock.out {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Cart Footer */
+        .cart-footer {
+            position: fixed;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 16px;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        .cart-items {
+            margin-bottom: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .cart-item-qty {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .cart-item-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 2px solid var(--border);
+            margin-top: 8px;
+        }
+
+        .cart-total-label {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .cart-total-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--surface);
+            color: var(--text);
+            min-height: 48px;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .qty-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .qty-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .qty-btn:active {
+            transform: scale(0.9);
+        }
+
+        .qty-value {
+            font-size: 20px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        /* Products List */
+        .products-list {
+            margin-bottom: 100px;
+        }
+
+        .product-item {
+            background: var(--surface);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .product-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .product-item-info {
+            flex: 1;
+        }
+
+        .product-item-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .product-item-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .product-item-stock {
+            font-size: 14px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-item-stock.low {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .product-item-stock.out {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            min-height: 40px;
+        }
+
+        .restock-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .restock-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            min-height: 36px;
+        }
+
+        /* Sales History */
+        .sales-list {
+            margin-bottom: 100px;
+        }
+
+        .date-group {
+            margin-bottom: 24px;
+        }
+
+        .date-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sale-item {
+            background: var(--surface);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .sale-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .sale-time {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .sale-total {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sale-items {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+
+        /* Insights */
+        .insights-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .insight-card {
+            background: var(--surface);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .insight-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-rank {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 30px;
+        }
+
+        .insight-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .insight-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .insight-stats {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .insight-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            text-align: right;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 16px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+        }
+
+        /* Utility */
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+
+        .mt-16 {
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1 id="header-title">
+            <span class="logo-pay">Pay</span><span class="logo-snap">Snap</span>
+        </h1>
+        <button id="settings-btn" onclick="showScreen('settings')" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; cursor: pointer; padding: 8px;">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="screen-dashboard" class="screen active">
+        <div class="container">
+            <div class="hero-metric">
+                <div class="hero-metric-label">Today's Revenue</div>
+                <div class="hero-metric-value" id="today-revenue">R 0.00</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value" id="total-sales">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Sale</div>
+                    <div class="stat-value" id="avg-sale">R 0.00</div>
+                </div>
+            </div>
+
+            <div class="alert-card" id="low-stock-alert" style="display: none;">
+                <div class="alert-header">
+                    <div class="alert-title">Low Stock Alerts</div>
+                    <div class="alert-count" id="low-stock-count">0</div>
+                </div>
+                <div style="font-size: 14px; color: var(--text-light); margin-bottom: 12px;">
+                    Some products are running low on stock
+                </div>
+                <button class="btn btn-secondary" onclick="showScreen('insights')">View Insights</button>
+            </div>
+
+            <div class="alert-card danger" id="out-of-stock-alert" style="display: none;">
+                <div class="alert-header">
+                    <div class="alert-title">Out of Stock</div>
+                    <div class="alert-count" id="out-of-stock-count">0</div>
+                </div>
+                <div style="font-size: 14px; color: var(--text-light); margin-bottom: 12px;">
+                    Some products are completely out of stock
+                </div>
+                <button class="btn btn-secondary" onclick="showScreen('insights')">View Insights</button>
+            </div>
+
+            <button class="btn" onclick="showScreen('new-sale')">Start New Sale</button>
+        </div>
+    </div>
+
+    <!-- New Sale Screen -->
+    <div id="screen-new-sale" class="screen">
+        <div class="container">
+            <div class="product-grid" id="product-grid"></div>
+        </div>
+        <div class="cart-footer" id="cart-footer" style="display: none;">
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-total">
+                <div class="cart-total-label">Total</div>
+                <div class="cart-total-value" id="cart-total">R 0.00</div>
+            </div>
+            <button class="btn" onclick="showCompleteSaleModal()">Complete Sale</button>
+        </div>
+    </div>
+
+    <!-- Products Screen -->
+    <div id="screen-products" class="screen">
+        <div class="container">
+            <div class="products-list" id="products-list"></div>
+            <button class="btn" onclick="showAddProductModal()">Add New Product</button>
+        </div>
+    </div>
+
+    <!-- Sales History Screen -->
+    <div id="screen-history" class="screen">
+        <div class="container">
+            <div class="sales-list" id="sales-list"></div>
+        </div>
+    </div>
+
+    <!-- Insights Screen -->
+    <div id="screen-insights" class="screen">
+        <div class="container">
+            <div class="insights-section">
+                <div class="section-title">Stock Alerts</div>
+                <div id="stock-alerts"></div>
+            </div>
+
+            <div class="insights-section">
+                <div class="section-title">Top Sellers</div>
+                <div id="top-sellers"></div>
+            </div>
+
+            <div class="insights-section">
+                <div class="section-title">Least Sold</div>
+                <div id="least-sold"></div>
+            </div>
+
+            <div class="insights-section">
+                <div class="section-title">Restock Recommendations</div>
+                <div id="restock-recommendations"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="screen-settings" class="screen">
+        <div class="container">
+            <button onclick="showScreen('dashboard')" style="background: none; border: none; color: var(--primary); font-size: 16px; font-weight: 600; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back
+            </button>
+            <div class="insights-section">
+                <div class="section-title" data-i18n="settings">Settings</div>
+                
+                <!-- Language Selection -->
+                <div class="insight-card">
+                    <div class="input-group">
+                        <label class="input-label" data-i18n="language">Language</label>
+                        <select class="input" id="language-select" onchange="changeLanguage(this.value)">
+                            <option value="en">English</option>
+                            <option value="af">Afrikaans</option>
+                            <option value="zu">isiZulu</option>
+                            <option value="xh">isiXhosa</option>
+                            <option value="st">Sesotho</option>
+                            <option value="nso">Sepedi</option>
+                            <option value="ts">Xitsonga</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Low Stock Threshold -->
+                <div class="insight-card">
+                    <div class="input-group">
+                        <label class="input-label" data-i18n="lowStockThreshold">Low Stock Threshold</label>
+                        <div class="qty-control">
+                            <button class="qty-btn" onclick="adjustLowStockThreshold(-1)">−</button>
+                            <div class="qty-value" id="low-stock-threshold">10</div>
+                            <button class="qty-btn" onclick="adjustLowStockThreshold(1)">+</button>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 8px;" data-i18n="lowStockDesc">Products with this quantity or less will show as low stock</div>
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="insight-card">
+                    <div class="section-title" style="font-size: 16px; margin-bottom: 16px;" data-i18n="dataManagement">Data Management</div>
+                    
+                    <button class="btn btn-secondary" onclick="exportData()" style="margin-bottom: 12px;" data-i18n="exportData">Export Data</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-bottom: 12px;" data-i18n="importData">Import Data</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                    
+                    <button class="btn" style="background: var(--danger); margin-top: 12px;" onclick="showClearDataConfirm()" data-i18n="clearAllData">Clear All Data</button>
+                </div>
+
+                <!-- App Info -->
+                <div class="insight-card">
+                    <div style="text-align: center; color: var(--text-light); font-size: 14px;">
+                        <div style="font-weight: 600; color: var(--text); margin-bottom: 8px;">PaySnap</div>
+                        <div data-i18n="version">Version 1.0.0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Sale Modal -->
+    <div id="modal-complete-sale" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Complete Sale</div>
+                <div class="modal-subtitle">Confirm the sale details</div>
+            </div>
+            <div id="complete-sale-items"></div>
+            <div style="display: flex; justify-content: space-between; padding: 16px 0; border-top: 2px solid var(--border); margin-top: 16px;">
+                <div style="font-size: 18px; font-weight: 600;">Total</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="complete-sale-total">R 0.00</div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Number of Customers</label>
+                <div class="qty-control">
+                    <button class="qty-btn" onclick="adjustCustomerCount(-1)">−</button>
+                    <div class="qty-value" id="customer-count">1</div>
+                    <button class="qty-btn" onclick="adjustCustomerCount(1)">+</button>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeModal('modal-complete-sale')">Cancel</button>
+                <button class="btn" onclick="completeSale()">Confirm Sale</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="modal-product" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="product-modal-title">Add Product</div>
+                <div class="modal-subtitle">Enter product details</div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Product Name</label>
+                <input type="text" class="input" id="product-name" placeholder="e.g., Bread">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Price (R)</label>
+                <input type="number" class="input" id="product-price" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Stock Quantity</label>
+                <input type="number" class="input" id="product-stock" placeholder="0" min="0">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeModal('modal-product')">Cancel</button>
+                <button class="btn" onclick="saveProduct()">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="showScreen('dashboard'); return false;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showScreen('new-sale'); return false;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span>New Sale</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showScreen('products'); return false;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <span>Products</span>
+        </a>
+    </div>
+
+    <script>
+        // Data Storage
+        let products = JSON.parse(localStorage.getItem('products') || '[]');
+        let sales = JSON.parse(localStorage.getItem('sales') || '[]');
+        let currentCart = [];
+        let editingProductId = null;
+        let customerCount = 1;
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        let lowStockThreshold = parseInt(localStorage.getItem('lowStockThreshold') || '10');
+
+        // Translations
+        const translations = {
+            en: {
+                settings: 'Settings',
+                language: 'Language',
+                lowStockThreshold: 'Low Stock Threshold',
+                lowStockDesc: 'Products with this quantity or less will show as low stock',
+                dataManagement: 'Data Management',
+                exportData: 'Export Data',
+                importData: 'Import Data',
+                clearAllData: 'Clear All Data',
+                version: 'Version 1.0.0',
+                confirmClear: 'Are you sure you want to clear all data? This cannot be undone.',
+                dataExported: 'Data exported successfully!',
+                dataImported: 'Data imported successfully!',
+                dataCleared: 'All data has been cleared.'
+            },
+            af: {
+                settings: 'Instellings',
+                language: 'Taal',
+                lowStockThreshold: 'Lae Voorraad Drempel',
+                lowStockDesc: 'Produkte met hierdie hoeveelheid of minder sal as lae voorraad wys',
+                dataManagement: 'Data Bestuur',
+                exportData: 'Voer Data Uit',
+                importData: 'Voer Data In',
+                clearAllData: 'Maak Alle Data Skoon',
+                version: 'Weergawe 1.0.0',
+                confirmClear: 'Is jy seker jy wil alle data skoonmaak? Dit kan nie ongedaan gemaak word nie.',
+                dataExported: 'Data suksesvol uitgevoer!',
+                dataImported: 'Data suksesvol ingevoer!',
+                dataCleared: 'Alle data is skoongemaak.'
+            },
+            zu: {
+                settings: 'Izilungiselelo',
+                language: 'Ulimi',
+                lowStockThreshold: 'Umkhawulo Wokuncipha Kwe-Stock',
+                lowStockDesc: 'Imikhiqizo enalenani noma ngaphansi izobonakala njengestock encane',
+                dataManagement: 'Ukuphatha Idatha',
+                exportData: 'Khipha Idatha',
+                importData: 'Faka Idatha',
+                clearAllData: 'Sula Yonke Idatha',
+                version: 'Inguqulo 1.0.0',
+                confirmClear: 'Uqinisekile ukuthi ufuna ukusula yonke idatha? Lokhu akukwazi ukuhlehliswa.',
+                dataExported: 'Idatha ikhishwe ngempumelelo!',
+                dataImported: 'Idatha ifakiwe ngempumelelo!',
+                dataCleared: 'Yonke idatha isusiwe.'
+            },
+            xh: {
+                settings: 'Iisetingi',
+                language: 'Ulwimi',
+                lowStockThreshold: 'Umda We-Stock Ephantsi',
+                lowStockDesc: 'Imveliso enobungakanani obu nokuba ngaphantsi iya kubonakala njengestock ephantsi',
+                dataManagement: 'Ulawulo Lwedatha',
+                exportData: 'Rhweba Idatha',
+                importData: 'Ngenisa Idatha',
+                clearAllData: 'Cima Yonke Idatha',
+                version: 'Inguqulelo 1.0.0',
+                confirmClear: 'Uqinisekile ukuba ufuna ukucima yonke idatha? Oku akunakubuyiswa.',
+                dataExported: 'Idatha irhwebiwe ngempumelelo!',
+                dataImported: 'Idatha ingenisiwe ngempumelelo!',
+                dataCleared: 'Yonke idatha icinyiwe.'
+            },
+            st: {
+                settings: 'Litlhophiso',
+                language: 'Puo',
+                lowStockThreshold: 'Sekhahla sa Stock e Tlase',
+                lowStockDesc: 'Lihlahisoa tse nang le bongata boo kapa tlase bo tla bonts\'a joalo ka stock e tlase',
+                dataManagement: 'Tsamaiso ea Data',
+                exportData: 'Ntjhafatsa Data',
+                importData: 'Kenya Data',
+                clearAllData: 'Hlakola Data Eohle',
+                version: 'Mofuta 1.0.0',
+                confirmClear: 'O na le bonnete ba hore o batla ho hlakola data eohle? Sena ha se ka boela morao.',
+                dataExported: 'Data e ntjhafaditsoe ka katleho!',
+                dataImported: 'Data e kenyehiloe ka katleho!',
+                dataCleared: 'Data eohle e hlakotsoe.'
+            },
+            nso: {
+                settings: 'Ditaelo',
+                language: 'Polelo',
+                lowStockThreshold: 'Sekhahla sa Stock e Nyane',
+                lowStockDesc: 'Dihlahiswa tšeo di nago le bongata bjo bja goba ka tlase di tla bontšha bjalo ka stock e nyane',
+                dataManagement: 'Taolo ya Data',
+                exportData: 'Ntjhafatsa Data',
+                importData: 'Kenya Data',
+                clearAllData: 'Hlakola Data Yohle',
+                version: 'Mofuta 1.0.0',
+                confirmClear: 'O na le bonnete bja gore o nyaka go hlakola data yohle? Se se ka se boele morago.',
+                dataExported: 'Data e ntjhafaditšwe ka katleho!',
+                dataImported: 'Data e kenyehilwe ka katleho!',
+                dataCleared: 'Data yohle e hlakotšwe.'
+            },
+            ts: {
+                settings: 'Switirhisiwa',
+                language: 'Ririmi',
+                lowStockThreshold: 'Xiyimo xa Stock lexi Ntshinyana',
+                lowStockDesc: 'Swiendliwa leswi ni na xiyenge lexi kumbe hansi swi ta kombisa tanihi stock leyi ntshinyana',
+                dataManagement: 'Vulawuri bya Data',
+                exportData: 'Humesa Data',
+                importData: 'Ngenisa Data',
+                clearAllData: 'Susa Data Hinkwayo',
+                version: 'Nhluvuko 1.0.0',
+                confirmClear: 'U na ntiyiso leswaku u lava ku susa data hinkwayo? Leswi a swi nga hundzuki.',
+                dataExported: 'Data yi humesiwe hi ku humelela!',
+                dataImported: 'Data yi ngenisiwe hi ku humelela!',
+                dataCleared: 'Data hinkwayo yi susiwe.'
+            }
+        };
+
+        function t(key) {
+            return translations[currentLanguage][key] || translations.en[key] || key;
+        }
+
+        function updateTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            updateTranslations();
+            document.getElementById('language-select').value = lang;
+        }
+
+        function adjustLowStockThreshold(change) {
+            lowStockThreshold = Math.max(1, Math.min(100, lowStockThreshold + change));
+            localStorage.setItem('lowStockThreshold', lowStockThreshold.toString());
+            document.getElementById('low-stock-threshold').textContent = lowStockThreshold;
+            updateDashboard();
+        }
+
+        function loadSettings() {
+            document.getElementById('language-select').value = currentLanguage;
+            document.getElementById('low-stock-threshold').textContent = lowStockThreshold;
+            updateTranslations();
+        }
+
+        function exportData() {
+            const data = {
+                products: products,
+                sales: sales,
+                exportDate: new Date().toISOString(),
+                version: '1.0.0'
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `paysnap-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert(t('dataExported'));
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.products && Array.isArray(data.products)) {
+                        products = data.products;
+                        saveProducts();
+                    }
+                    if (data.sales && Array.isArray(data.sales)) {
+                        sales = data.sales;
+                        saveSales();
+                    }
+                    alert(t('dataImported'));
+                    updateDashboard();
+                    renderProducts();
+                    renderProductGrid();
+                    event.target.value = ''; // Reset file input
+                } catch (error) {
+                    alert('Error importing data: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showClearDataConfirm() {
+            if (confirm(t('confirmClear'))) {
+                clearAllData();
+            }
+        }
+
+        function clearAllData() {
+            products = [];
+            sales = [];
+            currentCart = [];
+            localStorage.removeItem('products');
+            localStorage.removeItem('sales');
+            alert(t('dataCleared'));
+            init();
+        }
+
+        // Initialize
+        function init() {
+            // Load settings
+            currentLanguage = localStorage.getItem('language') || 'en';
+            lowStockThreshold = parseInt(localStorage.getItem('lowStockThreshold') || '10');
+            
+            if (products.length === 0) {
+                // Add sample products
+                products = [
+                    { id: 1, name: 'Bread', price: 12.50, stock: 20, totalSold: 0, totalRevenue: 0 },
+                    { id: 2, name: 'Milk', price: 15.00, stock: 15, totalSold: 0, totalRevenue: 0 },
+                    { id: 3, name: 'Eggs', price: 25.00, stock: 30, totalSold: 0, totalRevenue: 0 },
+                    { id: 4, name: 'Sugar', price: 18.00, stock: 10, totalSold: 0, totalRevenue: 0 },
+                    { id: 5, name: 'Cooking Oil', price: 35.00, stock: 8, totalSold: 0, totalRevenue: 0 },
+                    { id: 6, name: 'Rice', price: 45.00, stock: 12, totalSold: 0, totalRevenue: 0 }
+                ];
+                saveProducts();
+            }
+            updateTranslations();
+            updateDashboard();
+            renderProducts();
+            renderProductGrid();
+        }
+
+        // Save/Load Functions
+        function saveProducts() {
+            localStorage.setItem('products', JSON.stringify(products));
+        }
+
+        function saveSales() {
+            localStorage.setItem('sales', JSON.stringify(sales));
+        }
+
+        // Screen Navigation
+        function showScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            const screen = document.getElementById(`screen-${screenName}`);
+            if (screen) {
+                screen.classList.add('active');
+            }
+
+            // Update header - Keep PaySnap logo always visible
+            const headerTitle = document.getElementById('header-title');
+            const screenTitles = {
+                'dashboard': '',
+                'new-sale': 'New Sale',
+                'products': 'Products',
+                'history': 'Sales History',
+                'insights': 'Insights',
+                'settings': 'Settings'
+            };
+            const screenTitle = screenTitles[screenName] || '';
+            
+            if (screenTitle) {
+                headerTitle.innerHTML = `<span class="logo-pay">Pay</span><span class="logo-snap">Snap</span> <span style="color: white; font-weight: 400; opacity: 0.9;">• ${screenTitle}</span>`;
+            } else {
+                headerTitle.innerHTML = `<span class="logo-pay">Pay</span><span class="logo-snap">Snap</span>`;
+            }
+
+            // Update nav
+            const navMap = {
+                'dashboard': 0,
+                'new-sale': 1,
+                'products': 2
+            };
+            if (navMap[screenName] !== undefined) {
+                document.querySelectorAll('.nav-item')[navMap[screenName]].classList.add('active');
+            }
+
+            // Refresh screen data
+            if (screenName === 'dashboard') {
+                updateDashboard();
+            } else if (screenName === 'new-sale') {
+                renderProductGrid();
+                updateCart();
+            } else if (screenName === 'products') {
+                renderProducts();
+            } else if (screenName === 'history') {
+                renderSalesHistory();
+            } else if (screenName === 'insights') {
+                renderInsights();
+            } else if (screenName === 'settings') {
+                loadSettings();
+                document.getElementById('settings-btn').style.display = 'none';
+            } else {
+                document.getElementById('settings-btn').style.display = 'block';
+            }
+        }
+
+        // Dashboard
+        function updateDashboard() {
+            const today = new Date().toDateString();
+            const todaySales = sales.filter(s => new Date(s.date).toDateString() === today);
+            const todayRevenue = todaySales.reduce((sum, s) => sum + s.total, 0);
+            const totalSalesCount = sales.length;
+            const avgSale = totalSalesCount > 0 ? sales.reduce((sum, s) => sum + s.total, 0) / totalSalesCount : 0;
+
+            document.getElementById('today-revenue').textContent = formatCurrency(todayRevenue);
+            document.getElementById('total-sales').textContent = totalSalesCount;
+            document.getElementById('avg-sale').textContent = formatCurrency(avgSale);
+
+            // Check stock alerts
+            const lowStock = products.filter(p => p.stock > 0 && p.stock <= lowStockThreshold);
+            const outOfStock = products.filter(p => p.stock === 0);
+
+            if (lowStock.length > 0) {
+                document.getElementById('low-stock-alert').style.display = 'block';
+                document.getElementById('low-stock-count').textContent = lowStock.length;
+            } else {
+                document.getElementById('low-stock-alert').style.display = 'none';
+            }
+
+            if (outOfStock.length > 0) {
+                document.getElementById('out-of-stock-alert').style.display = 'block';
+                document.getElementById('out-of-stock-count').textContent = outOfStock.length;
+            } else {
+                document.getElementById('out-of-stock-alert').style.display = 'none';
+            }
+        }
+
+        // Product Grid (New Sale)
+        function renderProductGrid() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = `product-card ${product.stock === 0 ? 'disabled' : ''}`;
+                
+                const stockClass = product.stock === 0 ? 'out' : (product.stock <= lowStockThreshold ? 'low' : '');
+                const stockText = product.stock === 0 ? 'Out of Stock' : `${product.stock} left`;
+
+                card.innerHTML = `
+                    <div>
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${formatCurrency(product.price)}</div>
+                    </div>
+                    <div class="product-stock ${stockClass}">
+                        ${product.stock === 0 ? '⚠️ ' : ''}${stockText}
+                    </div>
+                `;
+
+                if (product.stock > 0) {
+                    card.onclick = () => addToCart(product.id);
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Cart Management
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product || product.stock === 0) return;
+
+            const existingItem = currentCart.find(item => item.id === productId);
+            if (existingItem) {
+                // Check if we can add more
+                if (existingItem.quantity < product.stock) {
+                    existingItem.quantity++;
+                } else {
+                    alert(`Only ${product.stock} ${product.name} available in stock`);
+                    return;
+                }
+            } else {
+                currentCart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1
+                });
+            }
+
+            updateCart();
+        }
+
+        function removeFromCart(productId) {
+            currentCart = currentCart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        function updateCartQuantity(productId, change) {
+            const item = currentCart.find(item => item.id === productId);
+            if (!item) return;
+
+            const product = products.find(p => p.id === productId);
+            const newQty = item.quantity + change;
+
+            if (newQty <= 0) {
+                removeFromCart(productId);
+            } else if (newQty > product.stock) {
+                alert(`Only ${product.stock} ${product.name} available in stock`);
+            } else {
+                item.quantity = newQty;
+            }
+
+            updateCart();
+        }
+
+        function updateCart() {
+            const footer = document.getElementById('cart-footer');
+            const items = document.getElementById('cart-items');
+            const total = currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            if (currentCart.length === 0) {
+                footer.style.display = 'none';
+                return;
+            }
+
+            footer.style.display = 'block';
+            items.innerHTML = '';
+
+            currentCart.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-qty">
+                            <button onclick="updateCartQuantity(${item.id}, -1)" style="background: none; border: none; color: var(--primary); font-size: 18px; padding: 0 8px; cursor: pointer;">−</button>
+                            ${item.quantity}
+                            <button onclick="updateCartQuantity(${item.id}, 1)" style="background: none; border: none; color: var(--primary); font-size: 18px; padding: 0 8px; cursor: pointer;">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-item-price">${formatCurrency(item.price * item.quantity)}</div>
+                `;
+                items.appendChild(div);
+            });
+
+            document.getElementById('cart-total').textContent = formatCurrency(total);
+        }
+
+        // Complete Sale
+        function showCompleteSaleModal() {
+            if (currentCart.length === 0) return;
+
+            const modal = document.getElementById('modal-complete-sale');
+            const itemsDiv = document.getElementById('complete-sale-items');
+            const total = currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            itemsDiv.innerHTML = '';
+            currentCart.forEach(item => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 0; border-bottom: 1px solid var(--border);';
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>
+                            <div style="font-weight: 600;">${item.name}</div>
+                            <div style="font-size: 12px; color: var(--text-light);">${item.quantity} × ${formatCurrency(item.price)}</div>
+                        </div>
+                        <div style="font-weight: 600; color: var(--primary);">${formatCurrency(item.price * item.quantity)}</div>
+                    </div>
+                `;
+                itemsDiv.appendChild(div);
+            });
+
+            document.getElementById('complete-sale-total').textContent = formatCurrency(total);
+            customerCount = 1;
+            document.getElementById('customer-count').textContent = customerCount;
+            modal.classList.add('active');
+        }
+
+        function adjustCustomerCount(change) {
+            customerCount = Math.max(1, customerCount + change);
+            document.getElementById('customer-count').textContent = customerCount;
+        }
+
+        function completeSale() {
+            if (currentCart.length === 0) return;
+
+            // Create sale record
+            const sale = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                items: currentCart.map(item => ({
+                    productId: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity
+                })),
+                total: currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                customerCount: customerCount
+            };
+
+            // Update inventory and sales stats
+            currentCart.forEach(cartItem => {
+                const product = products.find(p => p.id === cartItem.id);
+                if (product) {
+                    product.stock -= cartItem.quantity;
+                    product.totalSold += cartItem.quantity;
+                    product.totalRevenue += cartItem.price * cartItem.quantity;
+                }
+            });
+
+            sales.push(sale);
+            saveProducts();
+            saveSales();
+
+            // Clear cart
+            currentCart = [];
+            updateCart();
+            closeModal('modal-complete-sale');
+            
+            // Show success and refresh
+            alert('Sale completed successfully!');
+            updateDashboard();
+            renderProductGrid();
+        }
+
+        // Products Management
+        function renderProducts() {
+            const list = document.getElementById('products-list');
+            list.innerHTML = '';
+
+            if (products.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-text">No products yet. Add your first product!</div></div>';
+                return;
+            }
+
+            products.forEach(product => {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                
+                const stockClass = product.stock === 0 ? 'out' : (product.stock <= 10 ? 'low' : '');
+                const stockText = product.stock === 0 ? 'Out of Stock' : `${product.stock} in stock`;
+
+                div.innerHTML = `
+                    <div class="product-item-header">
+                        <div class="product-item-info">
+                            <div class="product-item-name">${product.name}</div>
+                            <div class="product-item-price">${formatCurrency(product.price)}</div>
+                            <div class="product-item-stock ${stockClass}">
+                                ${product.stock === 0 ? '⚠️ ' : ''}${stockText}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="btn btn-secondary btn-small" onclick="editProduct(${product.id})">Edit</button>
+                        <button class="btn btn-secondary btn-small" onclick="deleteProduct(${product.id})">Delete</button>
+                    </div>
+                    <div class="restock-buttons">
+                        <button class="btn btn-secondary restock-btn" onclick="restockProduct(${product.id}, 10)">+10</button>
+                        <button class="btn btn-secondary restock-btn" onclick="restockProduct(${product.id}, 20)">+20</button>
+                        <button class="btn btn-secondary restock-btn" onclick="restockProduct(${product.id}, 50)">+50</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function showAddProductModal() {
+            editingProductId = null;
+            document.getElementById('product-modal-title').textContent = 'Add Product';
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-stock').value = '';
+            document.getElementById('modal-product').classList.add('active');
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            editingProductId = id;
+            document.getElementById('product-modal-title').textContent = 'Edit Product';
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-stock').value = product.stock;
+            document.getElementById('modal-product').classList.add('active');
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('product-name').value.trim();
+            const price = parseFloat(document.getElementById('product-price').value);
+            const stock = parseInt(document.getElementById('product-stock').value) || 0;
+
+            if (!name || !price || price <= 0) {
+                alert('Please fill in all fields correctly');
+                return;
+            }
+
+            if (editingProductId) {
+                const product = products.find(p => p.id === editingProductId);
+                if (product) {
+                    product.name = name;
+                    product.price = price;
+                    product.stock = stock;
+                }
+            } else {
+                products.push({
+                    id: Date.now(),
+                    name: name,
+                    price: price,
+                    stock: stock,
+                    totalSold: 0,
+                    totalRevenue: 0
+                });
+            }
+
+            saveProducts();
+            closeModal('modal-product');
+            renderProducts();
+            renderProductGrid();
+            updateDashboard();
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                products = products.filter(p => p.id !== id);
+                saveProducts();
+                renderProducts();
+                renderProductGrid();
+            }
+        }
+
+        function restockProduct(id, amount) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                product.stock += amount;
+                saveProducts();
+                renderProducts();
+                renderProductGrid();
+                updateDashboard();
+            }
+        }
+
+        // Sales History
+        function renderSalesHistory() {
+            const list = document.getElementById('sales-list');
+            list.innerHTML = '';
+
+            if (sales.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-text">No sales yet</div></div>';
+                return;
+            }
+
+            // Group by date
+            const grouped = {};
+            sales.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sales.forEach(sale => {
+                const date = new Date(sale.date).toDateString();
+                if (!grouped[date]) {
+                    grouped[date] = [];
+                }
+                grouped[date].push(sale);
+            });
+
+            Object.keys(grouped).forEach(date => {
+                const dateGroup = document.createElement('div');
+                dateGroup.className = 'date-group';
+
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'date-header';
+                dateHeader.textContent = date;
+                dateGroup.appendChild(dateHeader);
+
+                const dayTotal = grouped[date].reduce((sum, s) => sum + s.total, 0);
+                const daySales = grouped[date].length;
+
+                grouped[date].forEach(sale => {
+                    const div = document.createElement('div');
+                    div.className = 'sale-item';
+                    const time = new Date(sale.date).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+                    const itemsText = sale.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+                    
+                    div.innerHTML = `
+                        <div class="sale-header">
+                            <div class="sale-time">${time}</div>
+                            <div class="sale-total">${formatCurrency(sale.total)}</div>
+                        </div>
+                        <div class="sale-items">${itemsText}</div>
+                    `;
+                    dateGroup.appendChild(div);
+                });
+
+                list.appendChild(dateGroup);
+            });
+        }
+
+        // Insights
+        function renderInsights() {
+            // Stock Alerts
+            const stockAlerts = document.getElementById('stock-alerts');
+            const outOfStock = products.filter(p => p.stock === 0);
+            const lowStock = products.filter(p => p.stock > 0 && p.stock <= lowStockThreshold);
+
+            stockAlerts.innerHTML = '';
+
+            if (outOfStock.length === 0 && lowStock.length === 0) {
+                stockAlerts.innerHTML = '<div class="empty-state"><div class="empty-state-text">All products are well stocked!</div></div>';
+            } else {
+                [...outOfStock, ...lowStock].forEach(product => {
+                    const div = document.createElement('div');
+                    div.className = 'insight-card';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">${product.name}</div>
+                                <div style="font-size: 12px; color: var(--text-light);">${product.stock === 0 ? 'Out of Stock' : `${product.stock} left`}</div>
+                            </div>
+                            <div style="font-weight: 600; color: ${product.stock === 0 ? 'var(--danger)' : 'var(--warning)'};">
+                                ${product.stock === 0 ? '⚠️ Out' : '⚠️ Low'}
+                            </div>
+                        </div>
+                    `;
+                    stockAlerts.appendChild(div);
+                });
+            }
+
+            // Top Sellers
+            const topSellers = document.getElementById('top-sellers');
+            const sortedBySold = [...products]
+                .filter(p => p.totalSold > 0)
+                .sort((a, b) => b.totalSold - a.totalSold)
+                .slice(0, 5);
+
+            topSellers.innerHTML = '';
+            if (sortedBySold.length === 0) {
+                topSellers.innerHTML = '<div class="empty-state"><div class="empty-state-text">No sales yet</div></div>';
+            } else {
+                sortedBySold.forEach((product, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'insight-card';
+                    div.innerHTML = `
+                        <div class="insight-item">
+                            <div class="insight-rank">${index + 1}</div>
+                            <div class="insight-info">
+                                <div class="insight-name">${product.name}</div>
+                                <div class="insight-stats">${product.totalSold} sold • ${formatCurrency(product.totalRevenue)} revenue • ${product.stock} in stock</div>
+                            </div>
+                            <div class="insight-value">${formatCurrency(product.totalRevenue)}</div>
+                        </div>
+                    `;
+                    topSellers.appendChild(div);
+                });
+            }
+
+            // Least Sold
+            const leastSold = document.getElementById('least-sold');
+            const sortedByLeast = [...products]
+                .filter(p => p.totalSold === 0)
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            leastSold.innerHTML = '';
+            if (sortedByLeast.length === 0) {
+                leastSold.innerHTML = '<div class="empty-state"><div class="empty-state-text">All products have been sold</div></div>';
+            } else {
+                sortedByLeast.forEach(product => {
+                    const div = document.createElement('div');
+                    div.className = 'insight-card';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">${product.name}</div>
+                                <div style="font-size: 12px; color: var(--text-light);">${product.stock} in stock</div>
+                            </div>
+                            <div style="font-weight: 600; color: var(--text-light);">0 sold</div>
+                        </div>
+                    `;
+                    leastSold.appendChild(div);
+                });
+            }
+
+            // Restock Recommendations
+            const restockRecs = document.getElementById('restock-recommendations');
+            const recommendations = [...products]
+                .filter(p => p.totalSold > 0 && p.stock <= lowStockThreshold)
+                .sort((a, b) => {
+                    // Sort by sales velocity (totalSold / days since first sale) and low stock
+                    const velocityA = a.totalSold; // Simplified - in real app would use date
+                    const velocityB = b.totalSold;
+                    if (velocityA !== velocityB) return velocityB - velocityA;
+                    return a.stock - b.stock;
+                })
+                .slice(0, 5);
+
+            restockRecs.innerHTML = '';
+            if (recommendations.length === 0) {
+                restockRecs.innerHTML = '<div class="empty-state"><div class="empty-state-text">No restock recommendations at this time</div></div>';
+            } else {
+                recommendations.forEach(product => {
+                    const div = document.createElement('div');
+                    div.className = 'insight-card';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">${product.name}</div>
+                                <div style="font-size: 12px; color: var(--text-light);">${product.totalSold} sold • ${product.stock} left</div>
+                            </div>
+                            <div style="font-weight: 600; color: var(--warning);">Restock</div>
+                        </div>
+                    `;
+                    restockRecs.appendChild(div);
+                });
+            }
+        }
+
+        // Modal Functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Utility Functions
+        function formatCurrency(amount) {
+            return 'R ' + parseFloat(amount).toFixed(2);
+        }
+
+        // Close modals on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            // Add install button to dashboard if not already installed
+            const dashboard = document.getElementById('screen-dashboard');
+            if (dashboard && !window.matchMedia('(display-mode: standalone)').matches) {
+                const installBtn = document.createElement('button');
+                installBtn.className = 'btn btn-secondary';
+                installBtn.textContent = '📱 Install App';
+                installBtn.style.marginTop = '16px';
+                installBtn.onclick = installApp;
+                const container = dashboard.querySelector('.container');
+                if (container && !container.querySelector('.install-btn')) {
+                    installBtn.classList.add('install-btn');
+                    container.appendChild(installBtn);
+                }
+            }
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    const btn = document.querySelector('.install-btn');
+                    if (btn) btn.remove();
+                });
+            }
+        }
+
+        // Initialize app
+        init();
+    </script>
+</body>
+</html>
+
